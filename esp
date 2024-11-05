@@ -1,0 +1,72 @@
+
+local player = game.Players.LocalPlayer
+local character = (player.Character or player.CharacterAdded:Wait())
+local humanoid = character.Humanoid
+local humanoidRootPart = character.HumanoidRootPart
+
+-- Fell free to change those settings
+local Settings = {
+	outlineColor = Color3.fromRGB(255, 0, 4),
+	textColor = Color3.fromRGB(255, 0, 4)
+}
+
+local function createESP()
+	for i, v in workspace:GetDescendants() do
+		if v:IsA("Humanoid") and v.Parent:IsA("Model") and v.Parent.Name~= character.Name and not v.Parent:FindFirstChildWhichIsA("Highlight") then
+			local characters = v.Parent
+			if not characters:FindFirstChild("Esp GUI") then
+				local highlight = Instance.new("Highlight")
+				highlight.Parent = v.Parent
+				highlight.Adornee = v.Parent
+				highlight.FillTransparency = 1
+				highlight.OutlineTransparency = 0
+				highlight.OutlineColor = Settings.outlineColor
+				
+				local billboardGui = Instance.new("BillboardGui", characters:WaitForChild("Head"))
+				billboardGui.Size = UDim2.new(4, 0, 1, 0)
+				billboardGui.StudsOffset = Vector3.new(0, 1, 0)
+				billboardGui.Name = "Esp GUI"
+				billboardGui.AlwaysOnTop = true
+				billboardGui.Active = true
+
+				local charactersName = Instance.new("TextLabel", billboardGui)
+				charactersName.Name = "Name Overview"
+				charactersName.Text = characters.Name
+				charactersName.TextScaled = true
+				charactersName.Size = UDim2.new(1, 0, 1, 0)
+				charactersName.BackgroundTransparency = 1
+				charactersName.TextScaled = true
+				charactersName.TextColor3 = Settings.textColor
+				charactersName.Font = Enum.Font.Highway
+				charactersName.TextStrokeTransparency = 0
+				charactersName.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+			end
+		end
+	end
+end
+
+createESP()
+
+
+workspace.ChildAdded:Connect(function()
+	createESP()
+end)
+
+local healthDebounce = false
+humanoid.Changed:Connect(function()
+	if humanoid.health <= 10 and healthDebounce == false then
+		healthDebounce = true
+		local oldCFrame =humanoidRootPart.CFrame
+		humanoid.Health += 1
+		local safePlate = Instance.new("Part", workspace)
+		safePlate.Anchored = true
+		safePlate.Size = Vector3.new(10, 1, 10)
+		safePlate.CFrame = CFrame.new(math.random(1, 10 + 1000), math.random(1, 10 + 1000), math.random(1, 10 + 1000))
+		humanoidRootPart.CFrame = safePlate.CFrame + Vector3.new(0, 5, 0)
+		
+		task.wait(10)
+		humanoidRootPart.CFrame = oldCFrame
+		safePlate:Destroy()
+		healthDebounce = false
+	end
+end)
