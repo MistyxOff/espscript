@@ -1,14 +1,19 @@
 
 local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
 local character = (player.Character or player.CharacterAdded:Wait())
 local humanoid = character.Humanoid
 local humanoidRootPart = character.HumanoidRootPart
 
+local Debris = game:GetService("Debris")
+
 -- Fell free to change those settings
 local Settings = {
 	outlineColor = Color3.fromRGB(255, 0, 4),
-	textColor = Color3.fromRGB(255, 0, 4)
+	textColor = Color3.fromRGB(255, 0, 4),
+	fillTransparency = 1,
 }
+
 
 local function createESP()
 	for i, v in workspace:GetDescendants() do
@@ -16,9 +21,10 @@ local function createESP()
 			local characters = v.Parent
 			if not characters:FindFirstChild("Esp GUI") then
 				local highlight = Instance.new("Highlight")
+				highlight.Name = "Highlight Esp"
 				highlight.Parent = v.Parent
 				highlight.Adornee = v.Parent
-				highlight.FillTransparency = 1
+				highlight.FillTransparency = Settings.fillTransparency
 				highlight.OutlineTransparency = 0
 				highlight.OutlineColor = Settings.outlineColor
 				
@@ -40,16 +46,38 @@ local function createESP()
 				charactersName.Font = Enum.Font.Highway
 				charactersName.TextStrokeTransparency = 0
 				charactersName.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+				
+				local sound = Instance.new("Sound", humanoidRootPart)
+				sound.SoundId = "rbxassetid://9089046327"
+				sound.Volume = 0.3
+				sound.RollOffMaxDistance = 1000
+				sound.RollOffMinDistance = 10
+				sound:Play()
+				Debris:AddItem(sound, 3)
+				
+				task.spawn(function()
+					while task.wait(1) do
+						charactersName.Text = (characters.Name.." - Health : "..characters.Humanoid.Health)
+					end
+				end)
 			end
 		end
 	end
 end
-
 createESP()
 
-
-workspace.ChildAdded:Connect(function()
+workspace.DescendantAdded:Connect(function()
 	createESP()
+end)
+
+mouse.Button1Down:Connect(function()
+	if not character:FindFirstChildOfClass("Tool") then
+		if mouse.Target then
+			if mouse.Target.Parent:FindFirstChild("Humanoid") then
+				humanoidRootPart.CFrame = mouse.Target.Parent.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
+			end
+		end
+	end
 end)
 
 local healthDebounce = false
@@ -68,5 +96,11 @@ humanoid.Changed:Connect(function()
 		humanoidRootPart.CFrame = oldCFrame
 		safePlate:Destroy()
 		healthDebounce = false
+	elseif humanoid.Health == 0 then
+		for i, v in workspace:GetDescendants() do
+			if v.Name == "Esp GUI" or v.Name == "Highlight Esp" then
+				v:Destroy()
+			end
+		end
 	end
 end)
